@@ -1,0 +1,243 @@
+[
+  {
+    "id": "chichawatni",
+    "name": "Chichawatni",
+    "aliases": [
+      "Chicha Watni",
+      "ChichaWatni"
+    ],
+    "category": "town",
+    "lat": 30.5354804,
+    "lon": 72.6903375,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "lahore",
+    "name": "Lahore",
+    "aliases": [],
+    "category": "city",
+    "lat": 31.5656822,
+    "lon": 74.3141829,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "lahore-airport",
+    "name": "Lahore Airport",
+    "aliases": [
+      "Lahore Airport",
+      "Allama Iqbal Airport",
+      "LHE"
+    ],
+    "category": "airport",
+    "lat": 31.5194982,
+    "lon": 74.4010236,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "islamabad",
+    "name": "Islamabad",
+    "aliases": [],
+    "category": "city",
+    "lat": 33.6938118,
+    "lon": 73.0651511,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "multan",
+    "name": "Multan",
+    "aliases": [],
+    "category": "city",
+    "lat": 30.197838,
+    "lon": 71.4719683,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "sahiwal",
+    "name": "Sahiwal",
+    "aliases": [],
+    "category": "city",
+    "lat": 30.6715098,
+    "lon": 73.1110572,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "okara",
+    "name": "Okara",
+    "aliases": [],
+    "category": "city",
+    "lat": 30.8091281,
+    "lon": 73.4493301,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "pakpattan",
+    "name": "Pakpattan",
+    "aliases": [],
+    "category": "city",
+    "lat": 30.3550157,
+    "lon": 73.3951195,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "faisalabad",
+    "name": "Faisalabad",
+    "aliases": [],
+    "category": "city",
+    "lat": 31.4220558,
+    "lon": 73.0923253,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "rawalpindi",
+    "name": "Rawalpindi",
+    "aliases": [
+      "Pindi"
+    ],
+    "category": "city",
+    "lat": 33.5915446,
+    "lon": 73.053721,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "gujranwala",
+    "name": "Gujranwala",
+    "aliases": [],
+    "category": "city",
+    "lat": 32.1525312,
+    "lon": 74.1933745,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "sargodha",
+    "name": "Sargodha",
+    "aliases": [],
+    "category": "city",
+    "lat": 32.0836514,
+    "lon": 72.676461,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "bahawalpur",
+    "name": "Bahawalpur",
+    "aliases": [],
+    "category": "city",
+    "lat": 29.40295,
+    "lon": 71.6523454,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "arifwala",
+    "name": "Arifwala",
+    "aliases": [],
+    "category": "town",
+    "lat": 30.2944504,
+    "lon": 73.0589418,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "mian-channu",
+    "name": "Mian Channu",
+    "aliases": [],
+    "category": "town",
+    "lat": 30.4389367,
+    "lon": 72.3550547,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "burewala",
+    "name": "Burewala",
+    "aliases": [],
+    "category": "town",
+    "lat": 30.1553358,
+    "lon": 72.6815187,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "vehari",
+    "name": "Vehari",
+    "aliases": [],
+    "category": "city",
+    "lat": 30.044927,
+    "lon": 72.3500952,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "khanewal",
+    "name": "Khanewal",
+    "aliases": [],
+    "category": "city",
+    "lat": 30.3022528,
+    "lon": 71.9278916,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "toba-tek-singh",
+    "name": "Toba Tek Singh",
+    "aliases": [
+      "Toba"
+    ],
+    "category": "city",
+    "lat": 30.9777056,
+    "lon": 72.4860799,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "jhang",
+    "name": "Jhang",
+    "aliases": [],
+    "category": "city",
+    "lat": 31.2728805,
+    "lon": 72.3103071,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "kasur",
+    "name": "Kasur",
+    "aliases": [],
+    "category": "city",
+    "lat": 31.1175143,
+    "lon": 74.4478314,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "sheikhupura",
+    "name": "Sheikhupura",
+    "aliases": [],
+    "category": "city",
+    "lat": 31.7085285,
+    "lon": 73.9864014,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  },
+  {
+    "id": "harappa",
+    "name": "Harappa",
+    "aliases": [],
+    "category": "town",
+    "lat": 30.5945898,
+    "lon": 72.9111742,
+    "source": "Nominatim/OSM",
+    "fetched_at": "2026-11-09"
+  }
+]
