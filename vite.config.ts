@@ -2,7 +2,13 @@ import { defineConfig } from "vite";
 import preact from "@preact/preset-vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+// GitHub Pages project site lives under /rehan-car-calculator/; the default
+// base "/" makes dist/index.html reference root-absolute assets that 404.
+// GH_PAGES=1 npm run build produces the Pages build; default build unchanged.
+const base = process.env.GH_PAGES ? "/rehan-car-calculator/" : "/";
+
 export default defineConfig({
+  base,
   plugins: [
     preact(),
     VitePWA({
@@ -12,14 +18,14 @@ export default defineConfig({
         name: "Car Calculator — Chichawatni",
         short_name: "CarCalc",
         description: "Offline-first rent-a-car calculator for Chichawatni, Punjab, Pakistan.",
-        start_url: "/",
+        start_url: base,
         display: "standalone",
         background_color: "#f7f7f5",
         theme_color: "#0b6e4f",
         lang: "en",
         icons: [
-          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: `${base}icons/icon-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: `${base}icons/icon-512.png`, sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
       },
       workbox: {
