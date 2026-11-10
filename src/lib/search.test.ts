@@ -45,6 +45,25 @@ describe("searchPlaces", () => {
   it("unknown place returns nothing (caller offers manual add)", () => {
     expect(searchPlaces("zzzzqqq", places)).toEqual([]);
   });
+  it("fast over the real v2 seed: 17,328 places, '112' finds Chak 112/12L", async () => {
+    const raw = (await import("../../public/data/places.json")).default as any[];
+    expect(raw.length).toBe(17_328);
+    const seed = raw.map((p) => ({ id: p.id, name: p.name, aliases: p.aliases ?? [], category: p.type ?? "place" }));
+    // One-time index build over the full seed (measured, not guessed).
+    const tBuild = performance.now();
+    searchPlaces("chak", seed);
+    const buildMs = performance.now() - tBuild;
+    console.log(`search index build over 17,328 places: ${buildMs.toFixed(1)} ms`);
+    expect(buildMs).toBeLessThan(2000);
+    // Per-keystroke after the index is built: <100 ms (spec C).
+    const t0 = performance.now();
+    const hits = searchPlaces("112", seed, 40);
+    const dt = performance.now() - t0;
+    console.log(`search "112" over 17,328 places: ${dt.toFixed(1)} ms, ${hits.length} hits`);
+    expect(dt).toBeLessThan(100);
+    expect(hits.some((h) => h.item.id === "osm-4427361666")).toBe(true); // Chak No 112/12.L
+    expect(hits[0].item.name).toContain("112");
+  });
   it("fast over 5,000 places (<100 ms per keystroke once the index is built)", () => {
     const big = Array.from({ length: 5000 }, (_, i) => ({ id: `p${i}`, name: `Chak ${i}/7-L`, aliases: [], category: "village" }));
     // First keystroke builds the index (one-time cost, ~90-165 ms on this

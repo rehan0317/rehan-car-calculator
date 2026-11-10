@@ -29,6 +29,37 @@ button.primary { background: var(--accent); color: #fff; border-color: var(--acc
 .result { border: 2px solid var(--accent); border-radius: 10px; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 8px; }
 .result > div { display: flex; justify-content: space-between; gap: 12px; font-size: 16px; }
 .result .total { border-top: 2px solid #ddd; padding-top: 8px; font-size: 18px; }
+/* v2: result card sticks above the bottom bar so it is always visible. */
+.result-sticky { position: sticky; bottom: 68px; z-index: 5; box-shadow: 0 -2px 12px rgba(0,0,0,.14); }
+/* v2: tiny sheets + big segmented control + toll row + picker rows */
+.toggle.big button { min-height: 56px; font-size: 18px; font-weight: 700; }
+.tollrow { display: flex; gap: 8px; align-items: stretch; }
+.tollrow-main { flex: 1 1 0; min-width: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; }
+.tollrow-main span { font-weight: 600; }
+.tollrow-main .chev { font-size: 26px; line-height: 1; color: #555; font-weight: 400; }
+.switch { display: flex; gap: 8px; align-items: center; font-size: 16px; min-height: 48px; white-space: nowrap; }
+.switch input { width: 24px; height: 24px; }
+.asof { font-size: 14px; color: #555; margin: 4px 0 0; }
+.picker-row { display: flex; flex-wrap: wrap; border-bottom: 1px solid #ddd; }
+.picker-row > button:first-child { flex: 1 1 auto; min-width: 0; text-align: left; border: none; border-radius: 0; }
+.picker button.mini, .mini { border: none; font-size: 14px; padding: 0 10px; min-height: 48px; color: var(--accent); font-weight: 600; background: transparent; }
+.alias-form { flex-basis: 100%; display: flex; gap: 8px; padding: 8px; }
+.alias-form input { flex: 1 1 0; min-width: 0; }
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { background: #fff; width: 100%; max-width: 560px; max-height: 85vh; overflow: auto; border-radius: 14px 14px 0 0; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+.sheet h3 { margin: 0; }
+.plaza { border: 1px solid #ccc; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+/* v2: plaza header wraps the badge onto its own line instead of splitting
+ * it mid-text and clipping it at the card edge (seen at 320 px). */
+.plaza > div:first-child { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.badge-ok, .badge, .badge-warn { white-space: nowrap; }
+/* v2: toll sheet total row — sum of known fares only; unverified plazas are
+ * never counted as Rs 0, the note underneath says so. */
+.sheet-total { border-top: 2px solid #ddd; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.sheet-total > div { display: flex; justify-content: space-between; gap: 12px; font-size: 18px; }
+.badge-ok { background: #e6f4ea; border: 1px solid #2e7d32; color: #2e7d32; border-radius: 6px; padding: 2px 8px; font-size: 13px; font-weight: 600; }
+.badge { background: #eef4ff; border: 1px solid #5b7db1; color: #33507d; border-radius: 6px; padding: 2px 8px; font-size: 13px; font-weight: 600; }
+.badge-warn { background: var(--warn-bg); border: 1px solid var(--warn-border); color: #7a5b00; border-radius: 6px; padding: 2px 8px; font-size: 13px; font-weight: 600; }
 .card { border: 1px solid #ccc; border-radius: 10px; padding: 12px; background: #fff; font-size: 16px; }
 .warn { background: var(--warn-bg); border: 1.5px solid var(--warn-border); border-radius: 8px; padding: 12px; font-size: 16px; }
 .ok { background: #e6f4ea; border: 1.5px solid #2e7d32; border-radius: 8px; padding: 12px; font-size: 16px; }
@@ -36,6 +67,6 @@ button.primary { background: var(--accent); color: #fff; border-color: var(--acc
 .row { display: flex; gap: 8px; }
 .row input { flex: 1; }
 .bottombar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: #fff; border-top: 1.5px solid #999; z-index: 10; }
-.bottombar button { flex: 1 1 0; min-width: 0; font-size: 14px; padding: 10px 0; border: none; border-radius: 0; min-height: 56px; }
+.bottombar button { flex: 1 1 0; min-width: 0; font-size: 13px; padding: 10px 0; border: none; border-radius: 0; min-height: 56px; }
 .bottombar button.active { background: var(--accent); color: #fff; font-weight: 700; }
 details summary { min-height: 48px; font-size: 16px; cursor: pointer; }

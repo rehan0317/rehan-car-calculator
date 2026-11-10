@@ -13,7 +13,11 @@ export interface BackupFile {
   tables: Record<string, unknown[]>;
 }
 
-const TABLES = ["settings", "cars", "trips", "expenses", "settlements", "settlementEdits", "routeOverrides", "placesCustom", "meta"] as const;
+const TABLES = ["settings", "cars", "trips", "expenses", "settlements", "settlementEdits", "routeOverrides", "placesCustom", "meta", "drivers", "placeAliases", "tollPlazas", "routeTolls", "placeUsage"] as const;
+
+/** v4 note: validateBackup ACCEPTS schema v3 backups (schemaVersion 3 < 4):
+ *  the check below only rejects backups NEWER than this app. A v3 backup
+ *  simply has no rows for the five v4 tables — those stay empty on restore. */
 
 /** FNV-1a 32-bit checksum over the canonical JSON of the tables (not crypto-grade,
  *  a corruption tripwire — the file is a local backup, not a signed document). */
@@ -49,10 +53,16 @@ export function validateBackup(data: unknown): { ok: boolean; error?: string; co
 
 export async function applyBackup(b: BackupFile, mode: "replace" | "merge"): Promise<void> {
   // Auto-snapshot current data first (as a downloadable file the user keeps).
-  const snapshot = await buildBackup();
-  downloadText(`car-backup-before-restore-${new Date().toISOString().slice(0, 10)}.json`,
-    JSON.stringify(snapshot, null, 2), "application/json");
-  await db.transaction("rw", [db.settings, db.cars, db.trips, db.expenses, db.settlements, db.settlementEdits, db.routeOverrides, db.placesCustom, db.meta], async () => {
+  // Guarded: in a headless/test environment there is no document to download
+  // through — the snapshot is skipped there, the restore still runs.
+  try {
+    const snapshot = await buildBackup();
+    downloadText(`car-backup-before-restore-${new Date().toISOString().slice(0, 10)}.json`,
+      JSON.stringify(snapshot, null, 2), "application/json");
+  } catch {
+    // No download surface (tests / headless) — continue with the restore.
+  }
+  await db.transaction("rw", [db.settings, db.cars, db.trips, db.expenses, db.settlements, db.settlementEdits, db.routeOverrides, db.placesCustom, db.meta, db.drivers, db.placeAliases, db.tollPlazas, db.routeTolls, db.placeUsage], async () => {
     if (mode === "replace") {
       for (const t of TABLES) await (db as any)[t].clear();
     }

@@ -31,6 +31,11 @@ export default defineConfig({
       workbox: {
         // Precache the full app shell + seed data so it opens offline after first load.
         globPatterns: ["**/*.{js,css,html,png,json,webmanifest}"],
+        // v2 seed data is big (places.json 5.87 MB; routes-seed.json 26.8 MB
+        // with 27,960 routes) — far above Workbox's 2 MiB default. The app
+        // is offline-first by spec, so the seed MUST be precached.
+        // First-install download is ~33 MB total, one-time.
+        maximumFileSizeToCacheInBytes: 40 * 1024 * 1024,
         navigateFallback: "index.html",
         runtimeCaching: [
           {

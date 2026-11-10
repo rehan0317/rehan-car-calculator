@@ -8,11 +8,33 @@ export interface Place {
   id: string;
   name: string;
   aliases: string[];
+  /** v1 seed field. The v2 seed may use `type` instead — see placeType(). */
   category: string;
+  /** v2 seed field (either `category` or `type` may be present). */
+  type?: string;
+  /** Urdu-script name (v2 seed, optional). */
+  nameUr?: string | null;
+  tehsil?: string | null;
+  district?: string | null;
   lat: number;
   lon: number;
   source: string;
   fetched_at: string;
+}
+
+/** Place type: v1 seed uses `category`, v2 seed may use `type`. Either wins. */
+export function placeType(p: Place): string {
+  return p.type ?? p.category;
+}
+
+/** Optional per-route tolls as shipped in the seed (added by the data agent;
+ *  absent for now — every route ships without it until toll data lands). */
+export interface SeedRouteTolls {
+  plazas: Array<{ name: string; fareOut: number | null; fareBack: number | null; verified: boolean }>;
+  totalOut: number | null;
+  totalBack: number | null;
+  asOf: string | null;
+  source: string | null;
 }
 
 export interface SeedRoute {
@@ -31,6 +53,8 @@ export interface SeedRoute {
   verified_source: string | null;
   deviation_pct: number | null;
   flag?: string;
+  /** Optional seed tolls (spec §E). Absent = no toll data for this route. */
+  tolls?: SeedRouteTolls;
 }
 
 export interface ResolvedRoute {
@@ -47,20 +71,59 @@ export interface ResolvedRoute {
   straightKm: number | null;
   ratio: number | null;
   ratioFlag: boolean;
+  /** Seed tolls for this route, if the seed carries any (null = no data). */
+  tolls: SeedRouteTolls | null;
+  /** Seed flag, e.g. "VERIFY WITH ODOMETER: ..." — shown on the Quote
+   *  screen so the owner sees it BEFORE quoting, not only in More. */
+  flag?: string | null;
 }
 
 let placesCache: Place[] | null = null;
 let routesCache: SeedRoute[] | null = null;
 
+/** Clear the places cache (call after adding an alias or a custom place). */
+export function invalidatePlacesCache(): void {
+  placesCache = null;
+}
+
 export async function loadPlaces(): Promise<Place[]> {
   if (placesCache) return placesCache;
   const res = await fetch(`${import.meta.env.BASE_URL}data/places.json`);
   if (!res.ok) throw new Error(`places.json failed: ${res.status}`);
-  const seed: Place[] = await res.json();
+  const raw: any[] = await res.json();
+  // Normalise defensively: the v2 seed may use `type` instead of `category`,
+  // and may carry nameUr/tehsil/district. All new fields are optional.
+  const seed: Place[] = raw.map((r) => ({
+    id: r.id,
+    name: r.name,
+    aliases: Array.isArray(r.aliases) ? r.aliases : [],
+    category: r.category ?? r.type ?? "place",
+    type: r.type ?? undefined,
+    nameUr: r.nameUr ?? null,
+    tehsil: r.tehsil ?? null,
+    district: r.district ?? null,
+    lat: r.lat ?? 0,
+    lon: r.lon ?? 0,
+    source: r.source ?? "seed",
+    fetched_at: r.fetched_at ?? "",
+  }));
+  // User-added popular names (placeAliases table) merge into search/display
+  // so they survive app updates; seed aliases are never overwritten.
+  const userAliases = await db.placeAliases.toArray();
+  const aliasByPlace = new Map<string, string[]>();
+  for (const a of userAliases) {
+    const list = aliasByPlace.get(a.placeId) ?? [];
+    if (!list.includes(a.alias)) list.push(a.alias);
+    aliasByPlace.set(a.placeId, list);
+  }
+  for (const p of seed) {
+    const extra = aliasByPlace.get(p.id);
+    if (extra) p.aliases = [...p.aliases, ...extra.filter((a) => !p.aliases.includes(a))];
+  }
   const custom = await db.placesCustom.toArray();
   placesCache = [
     ...seed,
-    ...custom.map((c) => ({ id: c.id, name: c.name, aliases: c.aliases, category: c.category, lat: 0, lon: 0, source: "Custom place (user)", fetched_at: c.createdAt.slice(0, 10) })),
+    ...custom.map((c) => ({ id: c.id, name: c.name, aliases: [...c.aliases, ...(aliasByPlace.get(c.id) ?? [])], category: c.category, lat: 0, lon: 0, source: "Custom place (user)", fetched_at: c.createdAt.slice(0, 10) })),
   ];
   return placesCache;
 }
@@ -92,10 +155,13 @@ export async function resolveRoute(fromId: string, toId: string, places: Place[]
   const ov = await db.routeOverrides.get(id);
   if (ov) {
     const ratio = straightKm ? roadStraightRatio(ov.km, straightKm) : null;
+    const seedForTolls = (await loadSeedRoutes()).find((r) => r.id === id);
     return {
       id, fromId, fromName, toId, toName, km: ov.km,
       sourceLabel: ov.source, isOverride: true, isDeleted: ov.deleted,
       straightKm, ratio, ratioFlag: ratio !== null && ratio > 2.0,
+      tolls: seedForTolls?.tolls ?? null,
+      flag: seedForTolls?.flag ?? null,
     };
   }
   const seed = (await loadSeedRoutes()).find((r) => r.id === id);
@@ -106,6 +172,8 @@ export async function resolveRoute(fromId: string, toId: string, places: Place[]
     sourceLabel: `Source: ${seed.source}, checked ${seed.fetched_at}`,
     isOverride: false, isDeleted: false,
     straightKm, ratio, ratioFlag: ratio !== null && ratio > 2.0,
+    tolls: seed.tolls ?? null,
+    flag: seed.flag ?? null,
   };
 }
 

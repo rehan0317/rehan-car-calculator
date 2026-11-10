@@ -13,6 +13,7 @@ export default defineConfig({
   },
   projects: [
     { name: "pixel5", use: { ...devices["Pixel 5"] } },
+    { name: "small360", use: { viewport: { width: 360, height: 640 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
     { name: "small320", use: { viewport: { width: 320, height: 568 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
   ],
 });

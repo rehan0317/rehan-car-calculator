@@ -12,10 +12,20 @@
  *    overwrite user edits.
  *  - placesCustom: user-added places ("Not found - add as custom place")
  *  - meta: schema/app version + last backup info
+ *  v4 adds (all start empty; v3 rows are left byte-identical by the migration):
+ *  - drivers: saved driver names + per-driver default settlement %
+ *  - placeAliases: user-added popular names for places (survive app updates)
+ *  - tollPlazas: toll plazas with official Car-class fares (or unverified)
+ *  - routeTolls: per-route plaza list + toll totals, keyed by routeId
+ *  - placeUsage: most-used counts for search ordering
+ *  v4 also adds settings.ratePerKm + ratePerKmSetOn (remembered from last
+ *  use, with "as of <date>"), and TripRow gains optional tollPlazas /
+ *  tollIncluded / extraCost. Old trips keep their stored v1 numbers: trips
+ *  are snapshots by design and are never recomputed.
  */
 import Dexie, { type Table } from "dexie";
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 export const APP_VERSION = "1.0.1";
 
 export interface SettingsRow {
@@ -27,6 +37,15 @@ export interface SettingsRow {
   defaultCarId: string | null;
   lastBackupAt: string | null; // ISO
   persistenceGranted: boolean | null;
+  /** v4: rate/km remembered from last use (Quote screen), with its as-of date. */
+  ratePerKm: number | null;
+  ratePerKmSetOn: string | null; // YYYY-MM-DD
+  /** v4: average km/L remembered from last use (Quote screen), with its
+   *  as-of date. Stored in settings (not the car row) so it is remembered
+   *  even on a fresh install with no car row at all. Optional: rows written
+   *  before v2 (and the v3 migration fixture) simply lack these keys. */
+  avgKmpl?: number | null;
+  avgKmplSetOn?: string | null; // YYYY-MM-DD
 }
 
 export interface CarRow {
@@ -70,6 +89,13 @@ export interface TripRow {
   note: string;
   createdAt: string;
   updatedAt: string;
+  /** v4 (optional — old trips are snapshots and never gain these fields):
+   *  per-plaza toll breakdown as charged, whether toll was included in the
+   *  bill, and any extra owner cost added at quote time. A plaza fare is
+   *  null when it was unknown at save time — never 0 for an unknown fare. */
+  tollPlazas?: Array<{ name: string; fare: number | null }>;
+  tollIncluded?: boolean;
+  extraCost?: number;
 }
 
 export type ExpenseCategory = "maintenance" | "repair" | "oil" | "tyre" | "insurance" | "other";
@@ -136,6 +162,62 @@ export interface CustomPlaceRow {
   createdAt: string;
 }
 
+/** v4: drivers, saved by name (typed once). defaultPct is the per-driver
+ *  settlement percent (default 30); settings.driverPct stays for migration
+ *  compat only — the UI no longer uses the global value. */
+export interface DriverRow {
+  id: string;
+  name: string;
+  defaultPct: number; // default 30
+  createdAt: string;
+}
+
+/** v4: user-added popular names for a place. Stored separately from the
+ *  bundled seed so app updates never overwrite them. */
+export interface PlaceAliasRow {
+  id: string;
+  placeId: string;
+  alias: string;
+  createdAt: string;
+}
+
+/** v4: a toll plaza with its official Car-class fares. fareBack defaults to
+ *  fareOut; it differs only when the official tariff has a return-ticket
+ *  fare. Null fare / verified=false = "Fare not verified — enter", never a guess. */
+export interface TollPlazaRow {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  fareOut: number | null;
+  fareBack: number | null;
+  effectiveDate: string | null; // tariff effective date, YYYY-MM-DD
+  sourceUrl: string | null;
+  verified: boolean;
+}
+
+/** v4: tolls for one stored route (keyed by routeId). Km and toll belong to
+ *  the same path; plazas are the ones actually crossed on that route.
+ *  fareOut/fareBack are null when the fare is NOT verified/entered — never
+ *  0: saving an empty fare as 0 would make the UI show "Rs 0" for an
+ *  unknown fare. tollTotalOut/Back sum KNOWN fares only; the UI recomputes
+ *  from the plaza list and shows "fare not verified" when any fare is null. */
+export interface RouteTollRow {
+  routeId: string; // key, e.g. "chichawatni--lahore"
+  plazas: Array<{ plazaId: string; name: string; fareOut: number | null; fareBack: number | null; verified: boolean }>;
+  tollTotalOut: number;
+  tollTotalBack: number;
+  asOf: string; // YYYY-MM-DD
+  source: string;
+}
+
+/** v4: usage counts driving most-used-first search ordering. */
+export interface PlaceUsageRow {
+  placeId: string; // key
+  count: number;
+  lastUsed: string; // ISO
+}
+
 export interface MetaRow {
   id: string;
   value: string;
@@ -151,6 +233,11 @@ export class CarDB extends Dexie {
   routeOverrides!: Table<RouteOverrideRow, string>;
   placesCustom!: Table<CustomPlaceRow, string>;
   meta!: Table<MetaRow, string>;
+  drivers!: Table<DriverRow, string>;
+  placeAliases!: Table<PlaceAliasRow, string>;
+  tollPlazas!: Table<TollPlazaRow, string>;
+  routeTolls!: Table<RouteTollRow, string>;
+  placeUsage!: Table<PlaceUsageRow, string>;
 
   constructor(name = "car-calculator") {
     super(name);
@@ -198,6 +285,32 @@ export class CarDB extends Dexie {
       placesCustom: "id, name",
       meta: "id",
     });
+    // v4: NEW tables only — drivers, placeAliases, tollPlazas, routeTolls,
+    // placeUsage. Every v3 table keeps its exact v3 schema. The upgrade
+    // deliberately touches NO v3 row: new tables start empty, old rows stay
+    // byte-identical (trips are snapshots; old stored numbers are never
+    // recomputed). Settings rows keep driverPct for compat; ratePerKm /
+    // ratePerKmSetOn / avgKmpl / avgKmplSetOn are only set on fresh rows
+    // or by the UI going forward (never by the migration itself).
+    this.version(4).stores({
+      settings: "id",
+      cars: "id, name",
+      trips: "id, date, carId, [date+carId]",
+      expenses: "id, date, carId, [date+carId]",
+      settlements: "id, startDate, endDate, carId, createdAt",
+      settlementEdits: "id, settlementId",
+      routeOverrides: "routeId",
+      placesCustom: "id, name",
+      meta: "id",
+      drivers: "id, name",
+      placeAliases: "id, placeId",
+      tollPlazas: "id, name",
+      routeTolls: "routeId",
+      placeUsage: "placeId",
+    }).upgrade(async () => {
+      // No-op by design: Dexie creates the new (empty) tables from the
+      // stores() definition above. No v3 row is read, written, or deleted.
+    });
   }
 }
 
@@ -218,6 +331,8 @@ export async function getSettings(): Promise<SettingsRow> {
   const fresh: SettingsRow = {
     id: "app", petrolPricePerLitre: null, petrolPriceSetOn: null, petrolStaleDays: 7,
     driverPct: null, defaultCarId: null, lastBackupAt: null, persistenceGranted: null,
+    ratePerKm: null, ratePerKmSetOn: null,
+    avgKmpl: null, avgKmplSetOn: null,
   };
   await db.settings.put(fresh);
   return fresh;
